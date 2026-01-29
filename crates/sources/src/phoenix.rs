@@ -133,8 +133,8 @@ impl PhoenixSource {
                 }
 
                 // Get stats and filter quality
-                if let Some(stats) = self.data_index.get_movie_stats(movie_id) {
-                    if stats.avg_rating >= self.min_avg_rating
+                if let Some(stats) = self.data_index.get_movie_stats(movie_id)
+                    && stats.avg_rating >= self.min_avg_rating
                         && stats.rating_count >= self.min_rating_count
                     {
                         // Score = normalized rating * genre preference
@@ -148,7 +148,6 @@ impl PhoenixSource {
                         candidate.metadata.matched_genres.push(*genre);
                         candidates.push(candidate);
                     }
-                }
             }
         }
         // Deduplicate, sort, and limit
@@ -170,8 +169,8 @@ impl PhoenixSource {
                 continue;
             }
         
-            if let Some(stats) = self.data_index.get_movie_stats(movie_id) {
-                if stats.avg_rating >= self.min_avg_rating
+            if let Some(stats) = self.data_index.get_movie_stats(movie_id)
+                && stats.avg_rating >= self.min_avg_rating
                     && stats.rating_count >= self.min_rating_count
                 {
                     let mut candidate = Candidate::new(
@@ -182,7 +181,6 @@ impl PhoenixSource {
                     candidate.metadata.from_popularity = true;
                     candidates.push(candidate);
                 }
-            }
         }
         
         candidates.sort_by(|a, b| b.base_score.partial_cmp(&a.base_score).unwrap());
@@ -209,10 +207,10 @@ impl PhoenixSource {
                 continue;
             }
         
-            if let Some(movie) = self.data_index.get_movie(movie_id) {
-                if let Some(year) = movie.year {
-                    if let Some(stats) = self.data_index.get_movie_stats(movie_id) {
-                        if stats.avg_rating >= self.min_avg_rating
+            if let Some(movie) = self.data_index.get_movie(movie_id)
+                && let Some(year) = movie.year
+                    && let Some(stats) = self.data_index.get_movie_stats(movie_id)
+                        && stats.avg_rating >= self.min_avg_rating
                             && stats.rating_count >= self.min_rating_count
                         {
                             // Score by year proximity + rating
@@ -229,9 +227,6 @@ impl PhoenixSource {
                             candidate.metadata.from_temporal = true;
                             candidates.push(candidate);
                         }
-                    }
-                }
-            }
         }
         
         candidates.sort_by(|a, b| b.base_score.partial_cmp(&a.base_score).unwrap());

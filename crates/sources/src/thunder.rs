@@ -113,7 +113,7 @@ impl ThunderSource {
         //     }
         // }
         let shared_counts = user_context.highly_rated_movies.par_iter().fold(
-            || HashMap::new(),
+            HashMap::new,
             |mut local_counts, &movie_id| {
                 let ratings = self.data_index.get_movie_ratings(movie_id);
                 for rating in ratings {
@@ -126,7 +126,7 @@ impl ThunderSource {
                 local_counts
             },
         ).reduce(
-            || HashMap::new(),
+            HashMap::new,
             |mut acc, local_counts| {
                 for (user_id, count) in local_counts {
                     *acc.entry(user_id).or_insert(0) += count;
@@ -157,8 +157,9 @@ impl ThunderSource {
         similar_users: &HashSet<UserId>,
         user_context: &UserContext,
     ) -> HashMap<MovieId, u32> {
-        let scores = similar_users.par_iter().fold(
-            || HashMap::new(),
+        
+        similar_users.par_iter().fold(
+            HashMap::new,
             |mut local_scores, &similar_user_id| {
                 let ratings = self.data_index.get_user_ratings(similar_user_id);
                 for rating in ratings {
@@ -171,15 +172,14 @@ impl ThunderSource {
                 local_scores
             },
         ).reduce(
-            || HashMap::new(),
+            HashMap::new,
             |mut acc, local_scores| {
                 for (movie_id, count) in local_scores {
                     *acc.entry(movie_id).or_insert(0) += count;
                 }
                 acc
             },
-        );
-        scores
+        )
     }
 }
 
