@@ -4,3 +4,27 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+# Local crates
+data-loader = { path = "../data-loader" }
+sources = { path = "../sources" }
+pipeline = { path = "../pipeline" }
+ml-client = { path = "../ml-client" }
+
+# Async runtime
+tokio = { version = "1.35", features = ["rt-multi-thread", "macros", "time", "net"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# gRPC (if we want server-side gRPC later)
+# tonic = "0.10"
+# prost = "0.12"
+
+[dev-dependencies]
+tonic = "0.10"
+tokio-stream = { version = "0.1", features = ["net"] }

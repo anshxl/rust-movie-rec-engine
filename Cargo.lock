@@ -1018,6 +1018,19 @@ dependencies = [
 [[package]]
 name = "server"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "data-loader",
+ "ml-client",
+ "pipeline",
+ "sources",
+ "thiserror",
+ "tokio",
+ "tokio-stream",
+ "tonic",
+ "tracing",
+ "tracing-subscriber",
+]
 
 [[package]]
 name = "sharded-slab"

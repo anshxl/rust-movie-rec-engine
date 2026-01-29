@@ -11,6 +11,7 @@ use anyhow::{Context, Result};
 use thiserror::Error;
 use tonic::transport::Channel;
 use tracing::{debug, error, info};
+use std::time::Duration;
 
 // Include the generated protobuf code
 pub mod recommendations {
@@ -68,6 +69,7 @@ impl MLScorerClient {
         
         let channel = Channel::from_shared(addr.clone())
             .context("Creating channel from address")?
+            .timeout(Duration::from_secs(5))
             .connect()
             .await
             .context("Connecting to ML service")?;
@@ -107,9 +109,10 @@ impl MLScorerClient {
     ) -> Result<Vec<f32>, MLClientError> {
         let expected_len = features.len();
         debug!(
-            "Scoring {} candidates for user {}",
+            "Scoring {} candidates for user {} at {}",
             expected_len,
-            user_id
+            user_id,
+            self.service_addr
         );
         let request = tonic::Request::new(ScoreRequest {
             user_id,
@@ -123,6 +126,16 @@ impl MLScorerClient {
         
         let scores = response.into_inner().scores;
 
+        let avg_score = scores.iter().sum::<f32>() / scores.len() as f32;
+        let min_score = scores.iter().cloned().fold(f32::INFINITY, f32::min);
+        let max_score = scores.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
+        debug!(
+            "Received {} scores: avg={}, min={}, max={}",
+            scores.len(),
+            avg_score,
+            min_score,
+            max_score
+        );
         if scores.len() != expected_len {
             error!(
                 "Mismatch in number of scores returned: expected {}, got {}",

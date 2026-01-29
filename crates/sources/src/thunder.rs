@@ -26,6 +26,7 @@ use tracing::{debug, instrument};
 use rayon::prelude::*;
 
 /// Thunder source generates in-network candidates via collaborative filtering
+#[derive(Clone)]
 pub struct ThunderSource {
     /// Shared reference to the data index (read-only, so no Mutex needed)
     data_index: Arc<DataIndex>,

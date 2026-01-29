@@ -27,6 +27,7 @@ use std::sync::Arc;
 use tracing::{debug, instrument};
 
 /// Phoenix source generates out-of-network candidates through discovery
+#[derive(Clone)]
 pub struct PhoenixSource {
     /// Shared reference to the data index
     data_index: Arc<DataIndex>,
