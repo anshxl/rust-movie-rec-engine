@@ -21,7 +21,6 @@ use recommendations::{
     ml_scorer_client::MlScorerClient as GrpcMlScorerClient,
     CandidateFeatures,
     ScoreRequest,
-    ScoreResponse,
 };
 
 /// Errors that can occur when interacting with the ML service
@@ -54,9 +53,6 @@ impl MLScorerClient {
     ///
     /// # Returns
     /// A connected client ready to score candidates
-    ///
-    /// # TODO: Implement this method
-    /// Steps:
     /// 1. Use tonic::transport::Channel::from_shared(addr)?
     /// 2. Call .connect().await to establish connection
     /// 3. Create GrpcMlScorerClient::new(channel)
@@ -69,10 +65,18 @@ impl MLScorerClient {
     pub async fn connect(addr: impl Into<String>) -> Result<Self> {
         let addr = addr.into();
         info!("Connecting to ML service at {}", addr);
+        
+        let channel = Channel::from_shared(addr.clone())
+            .context("Creating channel from address")?
+            .connect()
+            .await
+            .context("Connecting to ML service")?;
 
-        // TODO: Implement connection logic
-
-        unimplemented!("TODO: Implement ML client connection")
+        let client = GrpcMlScorerClient::new(channel);
+        Ok(MLScorerClient {
+            client,
+            service_addr: addr,
+        })
     }
 
     /// Score a batch of candidates for a given user.
@@ -96,30 +100,40 @@ impl MLScorerClient {
     /// - Handle gRPC errors (service down, timeout, etc.)
     /// - Validate response (correct number of scores)
     /// - Log errors with context
-    ///
-    /// Example:
-    /// ```ignore
-    /// let request = tonic::Request::new(ScoreRequest {
-    ///     user_id,
-    ///     features,
-    /// });
-    /// let response = self.client.score_candidates(request).await?;
-    /// let scores = response.into_inner().scores;
-    /// ```
     pub async fn score_candidates(
         &mut self,
         user_id: u32,
         features: Vec<CandidateFeatures>,
     ) -> Result<Vec<f32>, MLClientError> {
+        let expected_len = features.len();
         debug!(
             "Scoring {} candidates for user {}",
-            features.len(),
+            expected_len,
             user_id
         );
+        let request = tonic::Request::new(ScoreRequest {
+            user_id,
+            features,
+        });
 
-        // TODO: Implement scoring logic
+        let response = self.client.score_candidates(request).await.map_err(|e| {
+            error!("gRPC error while scoring candidates: {}", e);
+            MLClientError::ScoringError(e.to_string())
+        })?;
+        
+        let scores = response.into_inner().scores;
 
-        unimplemented!("TODO: Implement candidate scoring")
+        if scores.len() != expected_len {
+            error!(
+                "Mismatch in number of scores returned: expected {}, got {}",
+                expected_len,
+                scores.len()
+            );
+            return Err(MLClientError::InvalidResponse(
+                "Number of scores does not match number of features".into(),
+            ));
+        }
+        Ok(scores)  
     }
 
     /// Get the address of the ML service this client is connected to.
@@ -189,18 +203,20 @@ mod tests {
     // TODO: Add integration tests
     // You can add tests that connect to a running Python service:
     //
-    // #[tokio::test]
-    // async fn test_score_candidates_integration() {
-    //     let mut client = MLScorerClient::connect("http://localhost:50051")
-    //         .await
-    //         .expect("Failed to connect");
-    //
-    //     let features = vec![create_candidate_features(...)];
-    //     let scores = client.score_candidates(1, features)
-    //         .await
-    //         .expect("Failed to score");
-    //
-    //     assert_eq!(scores.len(), 1);
-    //     assert!(scores[0] >= 0.0 && scores[0] <= 1.0);
-    // }
+    #[tokio::test]
+    async fn test_score_candidates_integration() {
+        let mut client = MLScorerClient::connect("http://localhost:50051")
+            .await
+            .expect("Failed to connect");
+    
+        let features = vec![create_candidate_features(
+            1234, 0.8, 0.5, 0.9, 42, 4.2, 1500, 0.85, Some(1999), 0.7, 8765.0,
+        )];
+        let scores = client.score_candidates(1, features)
+            .await
+            .expect("Failed to score");
+    
+        assert_eq!(scores.len(), 1);
+        assert!(scores[0] >= 0.0 && scores[0] <= 1.0);
+    }
 }
