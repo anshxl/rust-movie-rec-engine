@@ -1,0 +1,35 @@
+[workspace]
+members = [
+    "crates/cli",
+    "crates/data-loader", 
+    "crates/ml-client", 
+    "crates/pipeline", 
+    "crates/server", 
+    "crates/sources"
+]
+resolver = "3"
+
+[workspace.dependencies]
+# Core dependencies
+anyhow = "1.0"
+thiserror = "1.0"
+tokio = { version = "1.35", features = ["full"] }
+rayon = "1.8"
+
+# Data structures
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# gRPC
+tonic = "0.11"
+prost = "0.12"
+
+# CLI
+clap = { version = "4.5", features = ["derive"] }
+
+# Testing
+criterion = "0.5"

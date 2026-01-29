@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package recommendations;
+
+// Service for ML-based candidate scoring
+service MLScorer {
+    // Score a batch of candidates for a given user
+    rpc ScoreCandidates(ScoreRequest) returns (ScoreResponse);
+}
+
+// Request message containing user context and candidate features
+message ScoreRequest {
+    uint32 user_id = 1;
+    repeated CandidateFeatures features = 2;
+}
+
+// Response containing ML scores for each candidate
+message ScoreResponse {
+    repeated float scores = 1;
+}
+
+// Features for a single candidate movie
+// These are computed in Rust and sent to Python for ML scoring
+message CandidateFeatures {
+    uint32 movie_id = 1;
+
+    // Genre similarity features
+    float genre_overlap_score = 2;      // Jaccard similarity with user's preferred genres
+    float genre_diversity_score = 3;     // How different from recently recommended
+
+    // Collaborative filtering signals
+    float collaborative_score = 4;       // From Thunder source
+    uint32 similar_users_count = 5;      // Count of similar users who liked this
+
+    // Popularity metrics
+    float avg_rating = 6;                // Movie's average rating
+    uint32 rating_count = 7;             // Total number of ratings
+    float popularity_percentile = 8;     // Percentile rank by popularity
+
+    // Temporal features
+    optional uint32 movie_year = 9;      // Release year (optional if unknown)
+    float year_preference_score = 10;    // How well year matches user's preference
+
+    // Recency
+    float days_since_released = 11;      // Days since release (for freshness boost)
+}
