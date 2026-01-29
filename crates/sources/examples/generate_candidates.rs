@@ -10,7 +10,7 @@
 //! 5. Display the results
 
 use data_loader::DataIndex;
-use sources::{user_context::build_user_context, CandidateSource, PhoenixSource, ThunderSource};
+use sources::{user_context::build_user_context, PhoenixSource, ThunderSource};
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;

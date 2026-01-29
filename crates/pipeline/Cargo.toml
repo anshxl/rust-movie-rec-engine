@@ -4,3 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+data-loader = { path = "../data-loader" }
+sources = { path = "../sources" }
+anyhow = "1.0"
+rayon = "1.10"
+tracing = "0.1"
+
+[dev-dependencies]
