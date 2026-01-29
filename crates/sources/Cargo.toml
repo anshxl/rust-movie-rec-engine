@@ -4,3 +4,18 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+# Workspace dependencies
+anyhow = { workspace = true }
+rayon = { workspace = true }
+tracing = { workspace = true }
+
+# Local dependencies
+data-loader = { path = "../data-loader" }
+
+[dev-dependencies]
+criterion = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+[[bench]]
+name = "candidate_generation"
+harness = false

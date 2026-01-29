@@ -278,6 +278,25 @@ impl DataIndex {
         self.movie_stats.get(&movie_id)
     }
 
+    /// Get all movie IDs in the index
+    ///
+    /// Useful for iterating over all movies (e.g., in popularity-based discovery)
+    pub fn get_all_movie_ids(&self) -> Vec<MovieId> {
+        self.movies.keys().copied().collect()
+    }
+
+    /// Get all movies released within a year range (inclusive)
+    ///
+    /// Example: get_movies_in_year_range(2000, 2005) returns movies from 2000-2005
+    pub fn get_movies_in_year_range(&self, start_year: u16, end_year: u16) -> Vec<MovieId> {
+        use std::ops::Bound::Included;
+
+        self.year_index
+            .range((Included(start_year), Included(end_year)))
+            .flat_map(|(_, movie_ids)| movie_ids.iter().copied())
+            .collect()
+    }
+
     // Mutators - These will be used during data loading
     // Note: They take `&mut self` (mutable reference) to modify the data
 

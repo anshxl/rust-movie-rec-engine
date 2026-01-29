@@ -30,7 +30,6 @@ impl DataIndex {
     /// 4. Compute movie statistics
     /// 5. Validate data integrity
     ///
-    /// TODO: Implement this function
     pub fn load_from_files(data_dir: &Path) -> Result<Self> {
         println!("Loading MovieLens dataset from {:?}", data_dir);
 
