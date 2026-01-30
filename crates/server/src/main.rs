@@ -32,7 +32,7 @@ async fn main() -> Result<()> {
     // Hint: Make sure Python ML service is running on localhost:50051
     // Hint: RecommendationOrchestrator::new(data_index, "http://localhost:50051").await?
     info!("Connecting to ML service...");
-    let mut orchestrator = RecommendationOrchestrator::new(
+    let orchestrator = RecommendationOrchestrator::new(
         data_index,
         "http://localhost:50051",
     ).await?;

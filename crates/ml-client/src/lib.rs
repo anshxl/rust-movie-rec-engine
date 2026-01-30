@@ -41,6 +41,7 @@ pub enum MLClientError {
 ///
 /// This wraps the auto-generated gRPC client and provides a higher-level
 /// interface for scoring candidates.
+#[derive(Clone)]
 pub struct MLScorerClient {
     client: GrpcMlScorerClient<Channel>,
     service_addr: String,
@@ -69,7 +70,7 @@ impl MLScorerClient {
         
         let channel = Channel::from_shared(addr.clone())
             .context("Creating channel from address")?
-            .timeout(Duration::from_secs(5))
+            .timeout(Duration::from_secs(10))
             .connect()
             .await
             .context("Connecting to ML service")?;
@@ -103,7 +104,7 @@ impl MLScorerClient {
     /// - Validate response (correct number of scores)
     /// - Log errors with context
     pub async fn score_candidates(
-        &mut self,
+        &self,
         user_id: u32,
         features: Vec<CandidateFeatures>,
     ) -> Result<Vec<f32>, MLClientError> {
@@ -119,7 +120,9 @@ impl MLScorerClient {
             features,
         });
 
-        let response = self.client.score_candidates(request).await.map_err(|e| {
+        // Clone the client (cheap - just clones the Arc'd Channel) to allow calling with &self
+        let mut client = self.client.clone();
+        let response = client.score_candidates(request).await.map_err(|e| {
             error!("gRPC error while scoring candidates: {}", e);
             MLClientError::ScoringError(e.to_string())
         })?;
@@ -218,7 +221,7 @@ mod tests {
     //
     #[tokio::test]
     async fn test_score_candidates_integration() {
-        let mut client = MLScorerClient::connect("http://localhost:50051")
+        let client = MLScorerClient::connect("http://localhost:50051")
             .await
             .expect("Failed to connect");
     

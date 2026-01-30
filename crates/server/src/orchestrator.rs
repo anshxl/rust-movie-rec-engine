@@ -46,11 +46,12 @@ pub struct MovieRecommendation {
 }
 
 /// Main orchestrator that coordinates the recommendation pipeline
+#[derive(Clone)]
 pub struct RecommendationOrchestrator {
     data_index: Arc<DataIndex>,
     thunder: ThunderSource,
     phoenix: PhoenixSource,
-    filter_pipeline: FilterPipeline,
+    filter_pipeline: Arc<FilterPipeline>,
     feature_engineer: FeatureEngineer,
     ml_client: MLScorerClient,
 }
@@ -78,10 +79,12 @@ impl RecommendationOrchestrator {
     ) -> Result<Self> {
         let thunder = ThunderSource::new(data_index.clone());
         let phoenix = PhoenixSource::new(data_index.clone());
-        let filter_pipeline = FilterPipeline::new()
-            .add_filter(AlreadyWatchedFilter)
-            .add_filter(MinimumRatingFilter::new(data_index.clone(), 3.5, 10))
-            .add_filter(GenrePreferenceFilter::new(data_index.clone(), 3));
+        let filter_pipeline = Arc::new(
+            FilterPipeline::new()
+                .add_filter(AlreadyWatchedFilter)
+                .add_filter(MinimumRatingFilter::new(data_index.clone(), 3.5, 10))
+                .add_filter(GenrePreferenceFilter::new(data_index.clone(), 3))
+        );
         let feature_engineer = FeatureEngineer::new(data_index.clone());
         let ml_client = MLScorerClient::connect(ml_service_addr).await?;
         Ok(Self {
@@ -103,7 +106,7 @@ impl RecommendationOrchestrator {
     /// # Returns
     /// Vector of MovieRecommendation sorted by score (highest first)
     pub async fn get_recommendations(
-        &mut self,
+        &self,
         user_id: UserId,
         limit: usize,
     ) -> Result<Vec<MovieRecommendation>> {
@@ -302,7 +305,7 @@ impl RecommendationOrchestrator {
 
     /// Score candidates using the ML service
     async fn score_with_ml(
-        &mut self,
+        &self,
         user_id: UserId,
         features: &[pipeline::CandidateFeatures],
     ) -> Result<Vec<f32>> {

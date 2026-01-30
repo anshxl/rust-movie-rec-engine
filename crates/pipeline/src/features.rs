@@ -61,6 +61,7 @@ impl CandidateFeatures {
 /// ## Performance Note
 /// Uses Rayon for parallel feature computation. For 200 candidates,
 /// target is <10ms total.
+#[derive(Clone)]
 pub struct FeatureEngineer {
     data_index: Arc<DataIndex>,
 }
